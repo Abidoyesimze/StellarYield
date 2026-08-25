@@ -1,5 +1,6 @@
 import { Router } from 'express';
-import { 
+import { recordFailure, resolveNetworkLabel } from '../monitoring/prometheus';
+import {
   portfolioAttributionEngine,
   protocolCompatibilityEngine,
   strategyHealthEngine,
@@ -572,6 +573,11 @@ router.get('/dashboard', async (req, res) => {
         dashboardData.attribution = formatAttributionReport(attribution);
       } catch (error) {
         console.error('Attribution data fetch failed:', error);
+        recordFailure({
+          route: 'portfolio/attribution',
+          network: resolveNetworkLabel(),
+          failure_category: 'attribution_fetch_failed',
+        });
       }
     }
 
@@ -620,6 +626,11 @@ router.get('/dashboard', async (req, res) => {
     res.json(successEnvelope(dashboardData, 'analytics/dashboard'));
   } catch (error) {
     console.error('Dashboard data fetch failed:', error);
+    recordFailure({
+      route: 'portfolio/analytics',
+      network: resolveNetworkLabel(),
+      failure_category: 'dashboard_fetch_failed',
+    });
     res.status(500).json(
       errorEnvelope(
         'INTERNAL_ERROR',

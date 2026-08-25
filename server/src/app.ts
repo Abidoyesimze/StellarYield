@@ -56,6 +56,8 @@ import momentumRouter from "./routes/momentum";
 import queueRouter from "./routes/queue";
 import vaultActivityRouter from "./routes/vaultActivity";
 import watchlistRouter from "./routes/watchlist";
+import stablecoinBasketRouter from "./routes/stablecoinBasket";
+import deltaNeutralRouter from "./routes/deltaNeutral";
 
 import { createAuthChallenge, verifyAuthChallenge } from "./utils/stellarAuth";
 import {
@@ -164,6 +166,8 @@ export function createApp() {
   app.use("/api/queue", queueRouter);
   app.use("/api/vaults/activity", vaultActivityRouter);
   app.use("/api/watchlist", watchlistRouter);
+  app.use("/api/strategies/stablecoin-basket", stablecoinBasketRouter);
+  app.use("/api/strategies/delta-neutral", deltaNeutralRouter);
   app.use("/api/google-sheets", googleSheetsRouter);
   app.use("/api", googleSheetsRouter);
 
