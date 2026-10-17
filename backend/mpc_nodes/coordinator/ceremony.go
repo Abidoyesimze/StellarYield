@@ -200,7 +200,7 @@ func (c *CeremonyCoordinator) StartKeyGenCeremony(ctx context.Context) (*tss.Key
 	c.currentPhase = PhaseCommit
 
 	// Wait for all commitments
-	if err := c.waitForPhase(PhaseCommit, c.config.TotalParties); err != nil {
+	if err := c.waitForPhase(ctx, PhaseCommit, c.config.TotalParties); err != nil {
 		return nil, errors.Wrap(err, "commit phase failed")
 	}
 
@@ -222,7 +222,7 @@ func (c *CeremonyCoordinator) StartKeyGenCeremony(ctx context.Context) (*tss.Key
 	c.currentPhase = PhaseReveal
 
 	// Wait for all reveals
-	if err := c.waitForPhase(PhaseReveal, c.config.TotalParties); err != nil {
+	if err := c.waitForPhase(ctx, PhaseReveal, c.config.TotalParties); err != nil {
 		return nil, errors.Wrap(err, "reveal phase failed")
 	}
 
@@ -286,7 +286,7 @@ func (c *CeremonyCoordinator) StartSigningCeremony(ctx context.Context, messageH
 	c.currentPhase = PhaseCommit
 
 	// Wait for all commitments
-	if err := c.waitForPhase(PhaseCommit, c.config.Threshold); err != nil {
+	if err := c.waitForPhase(ctx, PhaseCommit, c.config.Threshold); err != nil {
 		return nil, errors.Wrap(err, "commit phase failed")
 	}
 
@@ -332,7 +332,7 @@ func (c *CeremonyCoordinator) StartSigningCeremony(ctx context.Context, messageH
 	c.currentPhase = PhaseReveal
 
 	// Wait for enough signature shares
-	if err := c.waitForPhase(PhaseReveal, c.config.Threshold); err != nil {
+	if err := c.waitForPhase(ctx, PhaseReveal, c.config.Threshold); err != nil {
 		return nil, errors.Wrap(err, "reveal phase failed")
 	}
 
@@ -435,16 +435,20 @@ func (c *CeremonyCoordinator) handleSigningMessage(msg *CeremonyMessage) error {
 }
 
 // waitForPhase waits for all parties to complete a phase
-func (c *CeremonyCoordinator) waitForPhase(phase CeremonyPhase, required int) error {
-	timeout := time.After(c.config.Timeout)
+func (c *CeremonyCoordinator) waitForPhase(ctx context.Context, phase CeremonyPhase, required int) error {
+	timer := time.NewTimer(c.config.Timeout)
+	defer timer.Stop()
 	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()
 
 	for {
 		select {
-		case <-timeout:
+		case <-ctx.Done():
 			c.currentPhase = PhaseFailed
-			return errors.New("phase timeout")
+			return errors.Wrap(ctx.Err(), "ceremony aborted")
+		case <-timer.C:
+			c.currentPhase = PhaseFailed
+			return errors.Errorf("phase %s timed out waiting for %d participants", phase, required)
 		case <-ticker.C:
 			c.mu.RLock()
 			var count int

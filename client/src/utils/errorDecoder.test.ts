@@ -239,10 +239,10 @@ describe("KNOWN_CONTRACT_ERROR_CODES", () => {
         expect(KNOWN_CONTRACT_ERROR_CODES.has(1003)).toBe(true);
     });
 
-    it("contains donation error codes 2001–2002 and 2007", () => {
-        expect(KNOWN_CONTRACT_ERROR_CODES.has(2001)).toBe(true);
-        expect(KNOWN_CONTRACT_ERROR_CODES.has(2002)).toBe(true);
-        expect(KNOWN_CONTRACT_ERROR_CODES.has(2007)).toBe(true);
+    it("contains every documented vault extension error code", () => {
+        for (const code of [2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010]) {
+            expect(KNOWN_CONTRACT_ERROR_CODES.has(code)).toBe(true);
+        }
     });
 
     it("contains swap error codes 3001–3002", () => {

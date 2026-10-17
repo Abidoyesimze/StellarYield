@@ -189,6 +189,19 @@ impl YieldVault {
         (net, fee)
     }
 
+    /// Calculate a performance fee only on a realized gain above the vault's
+    /// cost basis. Deposits and unrealized mark-to-market changes therefore do
+    /// not create a fee. This helper is intentionally pure with respect to
+    /// storage so callers can settle the gain atomically with their transfer.
+    pub fn apply_realized_performance_fee(
+        env: &Env,
+        realized_assets: i128,
+        cost_basis: i128,
+    ) -> (i128, i128) {
+        let gain = realized_assets.saturating_sub(cost_basis).max(0);
+        Self::apply_performance_fee(env, gain)
+    }
+
     /// View: return the current performance fee in basis points.
     /// This fee is applied to harvest yields.
     pub fn get_performance_fee_bps(env: Env) -> i128 {
@@ -392,6 +405,22 @@ mod tests {
         assert_eq!(fee, 10);
         assert_eq!(net, 990);
         assert_eq!(net + fee, 1000);
+    }
+
+    #[test]
+    fn test_realized_performance_fee_ignores_unrealized_loss_and_principal() {
+        let (env, client, admin, _, _) = setup_env();
+        client.set_fee_bounds(&admin, &1_000, &1_000);
+
+        let (net, fee) = env.as_contract(&client.address, || {
+            YieldVault::apply_realized_performance_fee(&env, 900, 1_000)
+        });
+        assert_eq!((net, fee), (0, 0));
+
+        let (net, fee) = env.as_contract(&client.address, || {
+            YieldVault::apply_realized_performance_fee(&env, 1_200, 1_000)
+        });
+        assert_eq!((net, fee), (180, 20));
     }
 
     #[test]

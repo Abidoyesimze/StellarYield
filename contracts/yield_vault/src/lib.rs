@@ -618,14 +618,12 @@ impl YieldVault {
         YieldVault::require_init(&env)?;
         caller.require_auth();
         let admin: Address = Self::get_storage_required(&env, &DataKey::Admin)?;
-        let legacy_keeper: Option<Address> = env.storage().instance().get(&DataKey::Keeper);
         let is_admin = caller == admin;
-        let is_legacy_keeper = match &legacy_keeper {
-            Some(k) => k == &caller,
-            None => false,
-        };
         let is_registered = YieldVault::is_registered_keeper(&env, &caller);
-        if !is_admin && !is_legacy_keeper && !is_registered {
+        // Keepers must be explicitly registered by the admin. The historical
+        // Keeper storage slot is configuration metadata, not an authorization
+        // bypass; accepting it allowed a stale keeper to execute strategy work.
+        if !is_admin && !is_registered {
             return Err(VaultError::Unauthorized);
         }
         let base_token: Address = Self::get_storage_required(&env, &DataKey::Token)?;

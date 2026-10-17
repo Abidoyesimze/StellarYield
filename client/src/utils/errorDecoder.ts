@@ -39,7 +39,9 @@ export const KNOWN_CONTRACT_ERROR_CODES = new Set([
     // Vesting
     1001, 1002, 1003,
     // Donations
-    2001, 2002, 2007,
+    2001, 2002, 2007, 2008, 2009, 2010,
+    // Administrative and cross-contract errors
+    2003, 2004, 2005, 2006,
     // Intent Swap
     3001, 3002,
     // Zap

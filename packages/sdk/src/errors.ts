@@ -20,6 +20,14 @@ export const VAULT_ERROR_MESSAGES: Record<number, string> = {
   11: "Storage key not found",
   2001: "Invalid donation basis points (must be 0-10,000)",
   2002: "Charity address is not on protocol whitelist",
+  2003: "Administrative operation has expired",
+  2004: "Administrative operation was already executed",
+  2005: "Cross-contract call is unauthorized or on the wrong network",
+  2006: "Fee recipient is invalid",
+  2007: "Donation amount is below the minimum",
+  2008: "Deposit exceeds the configured liquidity depth",
+  2009: "Storage is already at the requested version",
+  2010: "Storage schema version does not match the contract",
 };
 
 export abstract class SorobanSdkError extends Error {
